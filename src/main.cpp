@@ -2092,6 +2092,9 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
     // Check coinbase reward
     int64 nTimeBlock = GetBlockTime();
     CBlockIndex* pindexPrev = pindexBest;
+    if ((pindexPrev->nHeight >= (int) CUTOFF_POW_BLOCK) && (IsProofOfWork()))
+              return DoS(100, error("CheckBlock() : Proof of work (%f TES) on or after block %d.\n",
+                                    ((double) vtx[0].GetValueOut() / (double) COIN), (int) CUTOFF_POW_BLOCK));
     if (nTimeBlock < REWARD_SWITCH_TIME) {
 		if (vtx[0].GetValueOut() > (IsProofOfWork()? MAX_MINT_PROOF_OF_WORK_LEGACY : 0))
 		    return DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s",
@@ -2171,7 +2174,7 @@ bool CBlock::AcceptBlock()
         return DoS(100, error("AcceptBlock() : incorrect %s", IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
 
     if (IsProofOfWork() && nHeight > CUTOFF_POW_BLOCK)
-            return DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
+        return DoS(100, error("AcceptBlock() : reject proof-of-work on or after %d", (int) CUTOFF_POW_BLOCK));
 
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast() || GetBlockTime() + nMaxClockDrift < pindexPrev->GetBlockTime())
@@ -3269,9 +3272,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CBlockLocator locator;
         uint256 hashStop;
         vRecv >> locator >> hashStop;
-
         // Find the last block the caller has in the main chain
         CBlockIndex* pindex = locator.GetBlockIndex();
+        unsigned int nHeight = locator.GetBlockIndex()->nHeight;
+
+             if (pindex->IsProofOfWork() && (nHeight >= CUTOFF_POW_BLOCK)) {
+                 if (pfrom)
+                       pfrom->Misbehaving(100);
+                 printf("Proof of work on or after block %d.\n", (int) CUTOFF_POW_BLOCK);
+                 return error("Proof of work on or after block %d.\n", (int) CUTOFF_POW_BLOCK);
+             }
 
         // Send the rest of the chain
         if (pindex)
