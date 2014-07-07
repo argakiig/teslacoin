@@ -372,7 +372,7 @@ QMAKE_EXTRA_COMPILERS += TSQM
 
 # "Other files" to show in Qt Creator
 OTHER_FILES += \
-    contrib/gitian-descriptors/* doc/*.rst doc/*.txt doc/README README.md res/NoirShares-qt.rc \
+    contrib/gitian-descriptors/* doc/*.rst doc/*.txt doc/README README.md res/Teslacoin-qt.rc \
     share/setup.nsi
 
 # platform specific defaults, if not overridden on command line
@@ -435,7 +435,7 @@ macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0
 macx:ICON = src/qt/res/icons/bitcoin.icns
-macx:TARGET = "NoirShares Qt"
+macx:TARGET = "Teslacoin Qt"
 macx:QMAKE_CFLAGS_THREAD += -pthread
 macx:QMAKE_LFLAGS_THREAD += -pthread
 macx:QMAKE_CXXFLAGS_THREAD += -pthread
